@@ -1,5 +1,5 @@
 // The name of your Azure OpenAI Resource.
-const resourceName=RESOURCE_NAME
+// const resourceName=RESOURCE_NAME
 
 // The deployment name you chose when you deployed the model.
 const mapper = {
@@ -53,6 +53,20 @@ async function handleRequest(request) {
     return new Response('Missing model mapper', {
         status: 403
     });
+  }
+  // 假设request.headers.get('Authorization')返回的值是"resourceName-authKey"
+  const authKeyFull = request.headers.get('Authorization');
+  const splitValues = authKeyFull.split('-', 2); // 分割一次，得到两个元素的数组
+
+  // 检查确保我们有两个元素
+  if (splitValues.length === 2) {
+    const resourceName = splitValues[0]; // 第一个值
+    const authKey = splitValues[1]; // 第二个值
+  } else {
+    // 如果不是两个元素，可能是格式错误
+    return new Response("authorization must be resourceName-authKey", {
+        status: 403
+      });
   }
   const fetchAPI = `https://${resourceName}.openai.azure.com/openai/deployments/${deployName}/${path}?api-version=${apiVersion}`
 
