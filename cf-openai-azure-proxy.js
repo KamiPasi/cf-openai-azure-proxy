@@ -1,17 +1,17 @@
 // The name of your Azure OpenAI Resource.
-// const resourceName=RESOURCE_NAME
+let resourceName;
 
 // The deployment name you chose when you deployed the model.
 const mapper = {
-    'gpt-3.5-turbo': DEPLOY_NAME_GPT35,
-    'gpt-3.5-turbo-0613': DEPLOY_NAME_GPT35,
-    'gpt-3.5-turbo-1106': DEPLOY_NAME_GPT35,
-    'gpt-3.5-turbo-16k': DEPLOY_NAME_GPT35,
-    'gpt-4': DEPLOY_NAME_GPT4,
-    'gpt-4-0613': DEPLOY_NAME_GPT4,
-    'gpt-4-1106-preview': DEPLOY_NAME_GPT4,
-    'gpt-4-32k': DEPLOY_NAME_GPT4,
-    'dall-e-3': typeof DEPLOY_NAME_DALLE3 !== 'undefined' ? DEPLOY_NAME_DALLE3 : "dalle3",
+    'gpt-3.5-turbo': 'gpt-35-turbo',
+    'gpt-3.5-turbo-0613': 'gpt-35-turbo-0613',
+    'gpt-3.5-turbo-1106': 'gpt-35-turbo-1106',
+    'gpt-3.5-turbo-16k': 'gpt-35-turbo-16k',
+    'gpt-4': 'gpt-4',
+    'gpt-4-1106-preview': 'gpt-4-1106-preview',
+    'gpt-4-vision-preview': 'gpt-4-vision-preview',
+    'gpt-4-32k': 'gpt-4-32k',
+    'dall-e-3': "dall-e-3",
 };
 
 const apiVersion="2023-12-01-preview"
@@ -54,34 +54,38 @@ async function handleRequest(request) {
         status: 403
     });
   }
+  const authKey2 = request.headers.get('Authorization');
+  if (!authKey2) {
+    return new Response("Not allowed", {
+      status: 403
+    });
+  }
   // 假设request.headers.get('Authorization')返回的值是"resourceName-authKey"
   const authKeyFull = request.headers.get('Authorization');
   const lastDashIndex = authKeyFull.lastIndexOf('-');
-
+  let authKey;
   if (lastDashIndex !== -1) {
     // 从右往左分割一次
-    const resourceName = authKeyFull.substring(0, lastDashIndex); // 从开始到最后一个"-"的位置
-    const authKey = authKeyFull.substring(lastDashIndex + 1); // 从最后一个"-"后面的位置到字符串结束
+    resourceName = authKeyFull.substring(0, lastDashIndex); // 从开始到最后一个"-"的位置
+    authKey = authKeyFull.substring(lastDashIndex + 1); // 从最后一个"-"后面的位置到字符串结束
+    resourceName = resourceName.replace('Bearer ', '');
+    
   } else {
+    // console.log("fail");
     // 如果没有找到"-"，可能是格式错误
       return new Response('Authorization header is in an incorrect format or does not contain "-"', {
         status: 403
       });
   }
   const fetchAPI = `https://${resourceName}.openai.azure.com/openai/deployments/${deployName}/${path}?api-version=${apiVersion}`
-
-  const authKey = request.headers.get('Authorization');
-  if (!authKey) {
-    return new Response("Not allowed", {
-      status: 403
-    });
-  }
-
+  // console.log(fetchAPI);
+  // console.log(resourceName); // 输出第一个值
+  // console.log(authKey); // 输出第二个值
   const payload = {
     method: request.method,
     headers: {
       "Content-Type": "application/json",
-      "api-key": authKey.replace('Bearer ', ''),
+      "api-key": authKey,
     },
     body: typeof body === 'object' ? JSON.stringify(body) : '{}',
   };
