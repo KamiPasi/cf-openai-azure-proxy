@@ -56,15 +56,15 @@ async function handleRequest(request) {
   }
   // 假设request.headers.get('Authorization')返回的值是"resourceName-authKey"
   const authKeyFull = request.headers.get('Authorization');
-  const splitValues = authKeyFull.split('-', 2); // 分割一次，得到两个元素的数组
+  const lastDashIndex = authKeyFull.lastIndexOf('-');
 
-  // 检查确保我们有两个元素
-  if (splitValues.length === 2) {
-    const resourceName = splitValues[0]; // 第一个值
-    const authKey = splitValues[1]; // 第二个值
+  if (lastDashIndex !== -1) {
+    // 从右往左分割一次
+    const resourceName = authKeyFull.substring(0, lastDashIndex); // 从开始到最后一个"-"的位置
+    const authKey = authKeyFull.substring(lastDashIndex + 1); // 从最后一个"-"后面的位置到字符串结束
   } else {
-    // 如果不是两个元素，可能是格式错误
-    return new Response("authorization must be resourceName-authKey", {
+    // 如果没有找到"-"，可能是格式错误
+      return new Response('Authorization header is in an incorrect format or does not contain "-"', {
         status: 403
       });
   }
